@@ -42,13 +42,23 @@ class AdminUserController extends Controller
 
 
         ], [
-            'username.required' => 'Nama Dosen Tidak Boleh Kosong',
-            'role_id.required' => 'Kode Dosen Tidak Boleh Kosong',
-            'password.required' => 'Jenis Dosen Tidak Boleh Kosong',
+            'username.required' => 'Username Tidak Boleh Kosong',
+            'role_id.required' => 'Role User Tidak Boleh Kosong',
+            'password.required' => 'Password Tidak Boleh Kosong',
 
         ]);
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors(), 'tipe' => 'multi'], 400);
+        }
+        $db = User::where('username', $request->username)->first();
+        if ($db) {
+            return response()->json(
+                [
+                    'message' => 'Username sudah digunakan',
+                    'tipe' => 'single'
+                ],
+                400
+            );
         }
         try {
             DB::beginTransaction();
@@ -99,6 +109,20 @@ class AdminUserController extends Controller
                 400
             );
         }
+
+        if ($user->username != $request->username) {
+            $db = User::where('username', $request->username)->first();
+            if ($db) {
+                return response()->json(
+                    [
+                        'message' => 'Username sudah digunakan',
+                        'tipe' => 'single'
+                    ],
+                    400
+                );
+            }
+        }
+
         try {
             DB::beginTransaction();
             $data = User::where('id', $request->id)->update([

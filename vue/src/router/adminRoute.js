@@ -25,6 +25,15 @@ const adminRoutes = [
       isAdmin: true,
       title: 'Referensi Role'
     }
+  },
+  {
+    path: '/admin_akun',
+    name: 'AdminAkun',
+    component: () => import('./../views/pages/admin/AdminAkun.vue'),
+    meta: {
+      isAdmin: true,
+      title: 'Pengaturan Akun'
+    }
   }
 ]
 

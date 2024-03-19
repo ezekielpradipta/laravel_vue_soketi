@@ -1,5 +1,6 @@
 import { jwtDecode } from 'jwt-decode'
 import sidebarAdmins from './SidebarAdmin'
+import sidebarUsers from './SidebarUser'
 
 const token = localStorage.getItem('token')
 const token_decode = jwtDecode(token)
@@ -9,6 +10,6 @@ export function sidebarMenu() {
   if (user_role === 'admin') {
     return sidebarAdmins
   } else {
-    return []
+    return sidebarUsers
   }
 }

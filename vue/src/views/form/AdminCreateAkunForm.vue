@@ -1,10 +1,19 @@
 <template>
   <LoaderComponent :loading="loader"></LoaderComponent>
-  <pre>{{ model }}</pre>
+
   <ButtonComponnet @click="backButton" right icon="back" size="xs" text="Kembali"></ButtonComponnet>
   <FormStep :mode="mode_form" @submit="buttonSimpanForm">
     <FormStepChild title="Data User">
       <CardComponent>
+        <AlertComponent title="Informasi">
+          <div class="flex">
+            <ButtonComponnet
+              @click="buttonResetPassword"
+              size="xs"
+              text="Reset Password"
+            ></ButtonComponnet>
+          </div>
+        </AlertComponent>
         <div class="grid gap-6 mb-4 md:grid-cols-2">
           <div class="col-span-1">
             <LabelComponent title="Role"></LabelComponent>
@@ -58,8 +67,9 @@ import TextComponent from '@/components/TextComponent.vue'
 import LabelComponent from '@/components/LabelComponent.vue'
 import useReferensi from '@/composables/Referensi'
 import useAdminUser from '@/composables/Admin/AdminUser'
+import AlertComponent from '@/components/AlertComponent.vue'
 const swal = inject('$swal')
-const { role_list, GetRoleList } = useReferensi()
+const { role_list, GetRoleList, resetPassword } = useReferensi()
 const { createUser, updateUser } = useAdminUser()
 const emit = defineEmits(['back', 'edit', 'delete'])
 const props = defineProps({
@@ -125,6 +135,28 @@ const buttonSimpanForm = async () => {
         emit('back')
       }
     }
+    loader.value = false
+  }
+}
+const buttonResetPassword = async () => {
+  const result = await swal({
+    title: 'Apakah Anda Yakin?',
+    text: 'Merubah Password menjadi qwerty123',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Ya!'
+  })
+  if (result.isConfirmed) {
+    loader.value = true
+    let data_form = new FormData()
+    data_form.append('id', model.id)
+    const { error } = await resetPassword(data_form)
+    if (!error) {
+      emit('back')
+    }
+
     loader.value = false
   }
 }

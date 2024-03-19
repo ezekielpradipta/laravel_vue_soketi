@@ -48,11 +48,28 @@
 }
 
 .multiselect-tags {
-  @apply flex-grow flex-shrink flex flex-wrap items-center mt-1 pl-2 min-w-0 rtl:pl-0 rtl:pr-2;
+  align-items: center;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-wrap: wrap;
+  margin: var(--ms-tag-my, 0.25rem) 0 0;
+  padding-left: var(--ms-py, 0.5rem);
 }
-
 .multiselect-tag {
-  @apply bg-red-500 text-white text-sm font-semibold py-0.5 pl-2 rounded mr-1 mb-1 flex items-center whitespace-nowrap min-w-0 rtl:pl-0 rtl:pr-2 rtl:mr-0 rtl:ml-1;
+  align-items: center;
+
+  border-radius: var(--ms-tag-radius, 4px);
+  color: var(--ms-tag-color, #fff);
+  display: flex;
+  font-size: var(--ms-tag-font-size, 0.875rem);
+  font-weight: var(--ms-tag-font-weight, 600);
+  line-height: var(--ms-tag-line-height, 1.25rem);
+  margin-bottom: var(--ms-tag-my, 0.25rem);
+  margin-right: var(--ms-tag-mx, 0.25rem);
+  padding: var(--ms-tag-py, 0.125rem) 0 var(--ms-tag-py, 0.125rem) var(--ms-tag-px, 0.5rem);
+  white-space: nowrap;
+  @apply bg-blue-500 dark:bg-blue-600;
 }
 .multiselect-tag.is-disabled {
   @apply pr-2 opacity-50 rtl:pl-2;
@@ -83,6 +100,7 @@
 }
 
 .multiselect-tags-search {
+  padding-left: var(--ms-px, 0.875rem);
   @apply absolute inset-0 border-0 outline-none focus:ring-0 appearance-none p-0 text-base font-sans box-border w-full;
 }
 

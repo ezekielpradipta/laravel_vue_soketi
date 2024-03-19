@@ -9,6 +9,7 @@ use App\Http\Controllers\KotakMasukController;
 use App\Http\Controllers\KotakPesanController;
 use App\Http\Controllers\LogUserController;
 use App\Http\Controllers\ReferensiController;
+use App\Http\Controllers\User\PesanController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UtilController;
 
@@ -34,6 +35,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/role_list', [ReferensiController::class, 'getRoleList']);
     Route::post('/role_list_pagination', [ReferensiController::class, 'getRoleListPagination']);
+    Route::post('/reset_password', [ReferensiController::class, 'resetPassword']);
+    Route::post('/ganti_password', [ReferensiController::class, 'gantiPassword']);
+    Route::post('/user_list', [ReferensiController::class, 'getUserList']);
+
     Route::middleware("role_admin")->group(function () {
         Route::prefix('admin')->group(function () {
             Route::post('/user_list_pagination', [AdminAdminUserController::class, 'getUserListPagination']);
@@ -44,6 +49,12 @@ Route::middleware('auth:api')->group(function () {
     });
     Route::middleware("role_user")->group(function () {
         Route::prefix('user')->group(function () {
+            Route::post('/kirim_pesan', [PesanController::class, 'kirimPesan']);
+            Route::post('/kotak_keluar', [PesanController::class, 'kotakKeluar']);
+            Route::post('/kotak_masuk', [PesanController::class, 'kotakMasuk']);
+            Route::post('/read_pesan', [PesanController::class, 'readPesan']);
+            Route::post('/delete_pesan', [PesanController::class, 'deletePesan']);
+            Route::post('/detail_pesan', [PesanController::class, 'detailPesan']);
         });
     });
 });

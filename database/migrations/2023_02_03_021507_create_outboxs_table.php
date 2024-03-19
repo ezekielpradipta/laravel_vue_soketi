@@ -15,11 +15,11 @@ return new class extends Migration
     {
         Schema::create('outboxs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id');
+            $table->unsignedBigInteger('sender_id');
+            $table->unsignedBigInteger('receiver_id');
             $table->string('subject');
             $table->string('body');
             $table->string('file_upload')->nullable();
-            $table->enum('is_read', ['0', '1']);
             $table->timestamps();
         });
     }

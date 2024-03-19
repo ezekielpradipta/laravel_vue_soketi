@@ -8,7 +8,7 @@
       <CardComponent title="List User Terdaftar">
         <TableComponent
           :headers="headers"
-          @pageSize="handlePerPageChange"
+          @per_page="handlePerPageChange"
           @search="handleSearch"
           :dataTable="data_table"
           @pagechanged="onPageChange"

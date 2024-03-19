@@ -11,7 +11,7 @@ class AuthClaim
     {
         $user = User::find($token->getUserIdentifier());
         $token->addClaim('role_name', $user->role_user->role->role_name);
-
+        $token->addClaim('user_name', $user->username);
 
         return $next($token);
     }

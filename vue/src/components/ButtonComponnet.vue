@@ -30,7 +30,7 @@
       <svg
         v-if="props.icon && props.icon != ''"
         class="w-6 h-6"
-        :class="props.text && props.text != '' ? ' mr-2' : ''"
+        :class="props.text && props.text != '' ? ' ' : ''"
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -75,8 +75,7 @@ const props = defineProps({
     default: false
   },
   icon: {
-    type: String,
-    default: 'flowbite'
+    type: String
   },
   text: {
     type: String
