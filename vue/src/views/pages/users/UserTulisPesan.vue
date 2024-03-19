@@ -103,11 +103,13 @@ import ButtonComponnet from '@/components/ButtonComponnet.vue'
 import Multiselect from '@vueform/multiselect'
 import useReferensi from '@/composables/Referensi'
 import usePesan from '@/composables/User/Pesan'
+import { useRouter } from 'vue-router'
 const { getPenerimaPesan } = useReferensi()
 const { kirimPesan } = usePesan()
 const loader = ref(false)
 const swal = inject('$swal')
 const user_id = inject('user_id')
+const router = useRouter()
 const model = reactive({
   subject: '',
   body: '',
@@ -175,7 +177,9 @@ const buttonSubmitPesan = async () => {
 
     const { error } = await kirimPesan(data_form, config_file)
     if (!error) {
-      console.log('AAAAAAAA')
+      router.push({
+        name: 'UserPesan'
+      })
     }
     loader.value = false
   }

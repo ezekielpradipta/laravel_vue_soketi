@@ -1,6 +1,6 @@
 <template>
   <LoaderComponent :loading="loader"></LoaderComponent>
-  <ParentTransation appear :visibility="true">
+  <ParentTransation v-if="!detail_pesan_form" appear :visibility="true">
     <!--  -->
     <div class="grid grid-cols-12 gap-4 mt-10 mb-10">
       <div class="col-span-12 xl:col-span-2">
@@ -286,7 +286,7 @@
                         <!--  -->
 
                         <td
-                          @click="buttonDetailPesan(p.id)"
+                          @click="buttonDetailPesan(p)"
                           class="p-4 text-sm text-gray-700 whitespace-nowrap dark:text-gray-400"
                           :class="
                             kotak_pesan === 'kotak_masuk' && p.is_read == '0'
@@ -297,7 +297,7 @@
                           {{ p.nama }}
                         </td>
                         <td
-                          @click="buttonDetailPesan(p.id)"
+                          @click="buttonDetailPesan(p)"
                           class="p-4 text-sm text-gray-700 whitespace-nowrap dark:text-gray-400"
                           :class="
                             kotak_pesan === 'kotak_masuk' && p.is_read == '0'
@@ -305,10 +305,10 @@
                               : 'font-medium'
                           "
                         >
-                          {{ p.subject }}
+                          {{ p.judul }}
                         </td>
                         <td
-                          @click="buttonDetailPesan(p.id)"
+                          @click="buttonDetailPesan(p)"
                           class="p-4 text-sm text-gray-700 whitespace-nowrap dark:text-gray-400"
                           :class="
                             kotak_pesan === 'kotak_masuk' && p.is_read == '0'
@@ -320,7 +320,7 @@
                         </td>
                         <td>
                           <button
-                            @click="buttonDeletePesan(p.id)"
+                            @click="buttonDeletePesan(p)"
                             class="flex items-center justify-between px-2 py-2 text-sm font-medium leading-5 text-red-500 rounded-lg dark:text-red-400 focus:outline-none focus:shadow-outline-gray"
                             aria-label="Delete"
                           >
@@ -407,6 +407,9 @@
       </div>
     </div>
   </ParentTransation>
+  <div v-if="detail_pesan_form">
+    <UserDetailPesanForm @back="buttonBack" :data_form="data_awal"></UserDetailPesanForm>
+  </div>
 </template>
 
 <script setup>
@@ -421,12 +424,14 @@ import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import CardComponent from '@/components/CardComponent.vue'
 import SearchComponent from '@/components/SearchComponent.vue'
+import UserDetailPesanForm from '@/views/form/UserDetailPesanForm.vue'
+import { useRoute } from 'vue-router'
 const {
   kotak_keluar,
   getKotakKeluar,
   kotak_masuk,
   getKotakMasuk,
-  detailPesan,
+
   readPesan,
   deletePesan
 } = usePesan()
@@ -435,6 +440,9 @@ const swal = inject('$swal')
 const store = useStore()
 const display = computed(() => store.getDisplay)
 const loader = ref(false)
+const detail_pesan_form = ref(false)
+const data_awal = ref({})
+const route = useRoute()
 const filter = reactive({
   tanggal_awal: '',
   tanggal_akhir: '',
@@ -533,14 +541,22 @@ const buttonStatusUnread = async () => {
   loader.value = false
 }
 const filter_judul = debounce(async () => {
+  loader.value = true
   data_table.pages = 1
   if (kotak_pesan.value === 'kotak_masuk') {
     await getKotakMasuk(data_table.pages, { ...filter })
   } else {
     await getKotakKeluar(data_table.pages, { ...filter })
   }
+  loader.value = false
 }, 1000)
+const buttonStatusRead = async () => {
+  loader.value = true
+  filter.status_baca = 1
 
+  await getKotakMasuk(1, { ...filter })
+  loader.value = false
+}
 const clear_date = async () => {
   loader.value = true
   filter.tanggal_awal = ''
@@ -584,7 +600,7 @@ const buttonDeletePesan = async (id) => {
   if (result.isConfirmed) {
     loader.value = true
     let data_form = new FormData()
-    data_form.append('id_pesan', id)
+    data_form.append('id_pesan', id.id)
     if (kotak_pesan.value === 'kotak_keluar') {
       data_form.append('jenis_pesan', 'KOTAK_KELUAR')
     } else {
@@ -602,19 +618,31 @@ const buttonDeletePesan = async (id) => {
   }
 }
 const buttonDetailPesan = async (id) => {
-  let data_form = new FormData()
-  data_form.append('id_pesan', id)
-  if (kotak_pesan.value === 'kotak_keluar') {
-    data_form.append('jenis_pesan', 'KOTAK_KELUAR')
-  } else {
+  loader.value = true
+  if (kotak_pesan.value === 'kotak_masuk') {
+    let data_form = new FormData()
+    data_form.append('id_pesan', id.id)
     data_form.append('jenis_pesan', 'KOTAK_MASUK')
-  }
-  const { error } = await detailPesan(data_form)
-  if (!error) {
     const { error } = await readPesan(data_form)
-    if (!error) {
-      console.log('AAAAAAAAAAAAAA')
+    if (error) {
+      return
     }
+  }
+  detail_pesan_form.value = true
+  data_awal.value = id
+  loader.value = false
+}
+const buttonBack = async () => {
+  loader.value = true
+  detail_pesan_form.value = false
+  data_awal.value = {}
+  kotak_pesan.value = 'kotak_masuk'
+  await getKotakMasuk(1, { ...filter })
+  loader.value = false
+}
+if (route.query) {
+  if (route.query.id) {
+    buttonDetailPesan(JSON.parse(atob(route.query.id)))
   }
 }
 </script>

@@ -42,6 +42,7 @@ axiosClient.interceptors.response.use(
     }
     if (error.response && error.response.status === 400) {
       if (error.response.data.message && error.response.data.tipe === 'multi') {
+        // eslint-disable-next-line no-unused-vars
         for (const [key, value] of Object.entries(error.response.data.message)) {
           toaster.error(`${value}`)
         }

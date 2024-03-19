@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\UtilController;
 use App\Models\Inbox;
 use App\Models\Outbox;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use ZipArchive;
 
 class PesanController extends Controller
 {
@@ -20,7 +22,29 @@ class PesanController extends Controller
     {
         $this->utilController = $utilController;
     }
-
+    public function notifPesan()
+    {
+        $penerima_id = Auth::user()->id;
+        $db = DB::table('inboxs as a')->join('users as b', 'a.sender_id', 'b.id')
+            ->select('a.id', 'a.is_read', 'a.created_at as tanggal', 'a.subject', 'b.username as nama', 'a.body', 'a.file_upload')
+            ->where('a.receiver_id', $penerima_id)
+            ->orderBy('a.created_at', 'desc')
+            ->where('a.is_read', '0')
+            ->take(5)
+            ->get()->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'nama' => $item->nama,
+                    'tanggal' => Carbon::parse($item->tanggal)->locale('id')->format('d-M-Y H:i'),
+                    'judul' => $item->subject,
+                    'keterangan' => $item->body,
+                    'is_read' => $item->is_read,
+                    'status' => 'PENGIRIM',
+                    'file_upload' => $item->file_upload,
+                ];
+            });
+        return response()->json($db);
+    }
     public function kotakMasuk(Request $request)
     {
         $status_baca = $request->status_baca ?? '';
@@ -29,7 +53,7 @@ class PesanController extends Controller
         $tanggal_akhir = $request->tanggal_akhir ?? "";
         $penerima_id = Auth::user()->id;
         $db = DB::table('inboxs as a')->join('users as b', 'a.sender_id', 'b.id')
-            ->select('a.id', 'a.is_read', 'a.created_at as tanggal', 'a.subject', 'b.username as nama')
+            ->select('a.id', 'a.is_read', 'a.created_at as tanggal', 'a.subject', 'b.username as nama', 'a.body', 'a.file_upload')
             ->where('a.receiver_id', $penerima_id)
             ->where('a.is_read', 'like', '%' . $status_baca . '%')->orderBy('is_read', 'asc')
             ->orderBy('a.created_at', 'desc')
@@ -42,6 +66,19 @@ class PesanController extends Controller
             $db = $db->whereBetween('a.created_at', [$tanggal_awal, $tanggal_akhir]);
         }
         $db = $db->paginate(10);
+        /** @var \App\Models\Inbox $db **/
+        $db->getCollection()->transform(function ($item) {
+            return [
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'tanggal' => Carbon::parse($item->tanggal)->locale('id')->format('d-M-Y H:i'),
+                'judul' => $item->subject,
+                'keterangan' => $item->body,
+                'is_read' => $item->is_read,
+                'status' => 'PENGIRIM',
+                'file_upload' => $item->file_upload,
+            ];
+        });
         return response()->json($db);
     }
     public function kotakKeluar(Request $request)
@@ -52,7 +89,7 @@ class PesanController extends Controller
         $tanggal_akhir = $request->tanggal_akhir ?? "";
         $pengirim_id = Auth::user()->id;
         $db = DB::table('outboxs as a')->join('users as b', 'a.receiver_id', 'b.id')
-            ->select('a.id',  'a.created_at as tanggal', 'a.subject', 'b.username as nama')
+            ->select('a.id',  'a.created_at as tanggal', 'a.subject', 'b.username as nama', 'a.body', 'a.file_upload')
             ->where('a.sender_id', $pengirim_id)
             ->orderBy('a.created_at', 'desc')
             ->where(function ($query) use ($judul) {
@@ -64,6 +101,18 @@ class PesanController extends Controller
             $db = $db->whereBetween('a.created_at', [$tanggal_awal, $tanggal_akhir]);
         }
         $db = $db->paginate(10);
+        /** @var \App\Models\Outbox $db **/
+        $db->getCollection()->transform(function ($item) {
+            return [
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'tanggal' => Carbon::parse($item->tanggal)->locale('id')->format('d-M-Y H:i'),
+                'judul' => $item->subject,
+                'keterangan' => $item->body,
+                'status' => 'PENERIMA',
+                'file_upload' => $item->file_upload,
+            ];
+        });
         return response()->json($db);
     }
 
@@ -119,38 +168,7 @@ class PesanController extends Controller
             return response()->json(['message' => 'Gagal', 'tipe' => 'single'], 400);
         }
     }
-    public function detailPesan(Request $request)
-    {
-        $jenis = $request->jenis_pesan;
-        $id = $request->id_pesan;
-        if ($jenis === 'KOTAK_MASUK') {
-            $db = DB::table('inboxs as a')->join('users as b', 'a.sender_id', 'b.id')
-                ->select('a.id', 'a.is_read', 'a.created_at as tanggal', 'a.subject', 'b.username as nama', 'a.file_upload')
-                ->where('a.id', $id)->first();
-            return response()->json([
-                'id' => $db->id,
-                'nama' => $db->nama,
-                'tanggal' => Carbon::parse($db->created_at)->locale('id')->format('d-M-Y H:i'),
-                'judul' => $db->subject,
-                'keterangan' => $db->body,
-                'status' => 'PENGIRIM',
-                'file_upload' => $db->file_upload,
-            ]);
-        } else {
-            $db = DB::table('outboxs as a')->join('users as b', 'a.receiver_id', 'b.id')
-                ->select('a.id', 'a.is_read', 'a.created_at as tanggal', 'a.subject', 'b.username as nama', 'a.file_upload')
-                ->where('a.id', $id)->first();
-            return response()->json([
-                'id' => $db->id,
-                'nama' => $db->nama,
-                'tanggal' => Carbon::parse($db->created_at)->locale('id')->format('d-M-Y H:i'),
-                'judul' => $db->subject,
-                'keterangan' => $db->body,
-                'status' => 'PENERIMA',
-                'file_upload' => $db->file_upload,
-            ]);
-        }
-    }
+
     public function readPesan(Request $request)
     {
         $id = $request->id_pesan;
@@ -189,9 +207,9 @@ class PesanController extends Controller
             $log = [
                 'filter' => 'HAPUS_PESAN',
                 'status' => "SUKSES",
-                'keterangan' => Auth::user()->username . " Berhasil Menghapus Pesan Baru - " . $no_surat
+                'information' => Auth::user()->username . " Berhasil Menghapus Pesan Baru - " . $no_surat
             ];
-            $this->utilController->create_log($log);
+            $this->utilController->createLog($log);
             DB::commit();
             return response()->json([
                 'message' => 'Pesan Berhasil Dihapus!!',
@@ -201,10 +219,28 @@ class PesanController extends Controller
             $log = [
                 'filter' => 'HAPUS_PESAN',
                 'status' => "Gagal",
-                'keterangan' => Auth::user()->username . " Gagal Menghapus Pesan Baru - " . $no_surat . ' ' . $e->getMessage()
+                'information' => Auth::user()->username . " Gagal Menghapus Pesan Baru - " . $no_surat . ' ' . $e->getMessage()
             ];
-            $this->utilController->create_log($log);
+            $this->utilController->createLog($log);
             return response()->json(['message' => 'Gagal', 'tipe' => 'single'], 400);
         }
+    }
+
+    public function downloadPesan(Request $request)
+    {
+        $file_ = $request->file_upload;
+        $uniqueString = Str::random(32);
+        if (!$file_ || !File::exists(public_path($file_))) {
+            return response()->json(["message" => "File TIdak Ada Dalam Database", 'tipe' => 'single'], 400);
+        }
+        $zipFile =   $uniqueString . '.zip';
+        $zip = new ZipArchive;
+        if ($zip->open(public_path($zipFile), ZipArchive::CREATE) !== TRUE) {
+            return response()->json(["message" => "Error creating zip file", 'tipe' => 'single'], 400);
+        }
+        $fileName = pathinfo($file_, PATHINFO_BASENAME);
+        $zip->addFromString($fileName, file_get_contents(public_path($file_)));
+        $zip->close();
+        return response()->download(public_path($zipFile))->deleteFileAfterSend(true);
     }
 }

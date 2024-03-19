@@ -4,6 +4,11 @@ import { ref } from 'vue'
 export default function usePesan() {
   const kotak_keluar = ref([])
   const kotak_masuk = ref([])
+  const notif_pesan = ref([])
+  const getNotifPesan = async () => {
+    let response = await axiosClient.get('/user/notif_pesan')
+    notif_pesan.value = response.data
+  }
   const kirimPesan = async (data, config) => {
     const response = await axiosClient.post('/user/kirim_pesan', data, config)
     return { error: response.response }
@@ -29,9 +34,21 @@ export default function usePesan() {
     const response = await axiosClient.post('/user/delete_pesan', data)
     return { error: response.response }
   }
-  const detailPesan = async (data) => {
-    const response = await axiosClient.post('/user/detail_pesan', data)
-    return { error: response.response }
+  const downloadPesan = async (data) => {
+    await axiosClient
+      .post(`/user/download_pesan/`, data, {
+        responseType: 'blob'
+      })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        const title = data.get('judul')
+        link.setAttribute('download', title + '.zip')
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+      })
   }
   return {
     kirimPesan,
@@ -39,8 +56,11 @@ export default function usePesan() {
     getKotakKeluar,
     kotak_masuk,
     getKotakMasuk,
-    detailPesan,
+
     readPesan,
-    deletePesan
+    deletePesan,
+    getNotifPesan,
+    notif_pesan,
+    downloadPesan
   }
 }

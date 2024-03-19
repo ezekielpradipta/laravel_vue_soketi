@@ -19,6 +19,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('public', function ($user) {
     return true;
 });
-Broadcast::channel('kotak-masuk.{id}', function ($user, $id) {
+Broadcast::channel('kirim-notif.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\KirimNotifikasi;
 use App\Http\Resources\FakultasResource;
 use App\Models\Inbox;
 use App\Models\LogUser;
@@ -74,5 +75,6 @@ class UtilController extends Controller
             'file_upload' => $file_upload,
 
         ]);
+        broadcast(new KirimNotifikasi($id_penerima));
     }
 }

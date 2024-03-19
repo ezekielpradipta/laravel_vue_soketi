@@ -12,7 +12,7 @@ use App\Http\Controllers\ReferensiController;
 use App\Http\Controllers\User\PesanController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UtilController;
-
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
+Broadcast::routes(['middleware' => ['auth:api']]);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/getFakultasList', [UtilController::class, 'getFakultasList']);
 Route::middleware('auth:api')->group(function () {
@@ -54,7 +54,8 @@ Route::middleware('auth:api')->group(function () {
             Route::post('/kotak_masuk', [PesanController::class, 'kotakMasuk']);
             Route::post('/read_pesan', [PesanController::class, 'readPesan']);
             Route::post('/delete_pesan', [PesanController::class, 'deletePesan']);
-            Route::post('/detail_pesan', [PesanController::class, 'detailPesan']);
+            Route::get('/notif_pesan', [PesanController::class, 'notifPesan']);
+            Route::post('/download_pesan', [PesanController::class, 'downloadPesan']);
         });
     });
 });

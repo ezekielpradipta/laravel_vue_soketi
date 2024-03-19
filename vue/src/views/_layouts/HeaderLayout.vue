@@ -53,7 +53,10 @@
             <span></span>
           </div>
           <!-- Notif Layout -->
-          <NotificationLayout></NotificationLayout>
+          <div v-if="role_name == 'user'">
+            <NotificationLayout></NotificationLayout>
+          </div>
+
           <!-- Dark Mode -->
           <DarkModeLayout></DarkModeLayout>
           <!-- User Drop Down -->
@@ -72,7 +75,7 @@ import DarkModeLayout from './DarkModeLayout.vue'
 import NotificationLayout from './NotificationLayout.vue'
 import UserDropDownLayout from './UserDropDownLayout.vue'
 const isSidebarOpen = inject('isSidebarOpen')
-
+const role_name = inject('role_name')
 const buttonShowSidebar = async () => {
   isSidebarOpen.value = !isSidebarOpen.value
   console.log(isSidebarOpen.value)
